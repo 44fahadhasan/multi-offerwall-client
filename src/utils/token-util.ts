@@ -5,34 +5,17 @@ import { env } from "../../env";
 import { cookieUtils } from "./cookie-util";
 import { jwtUtils } from "./jwt-util";
 
-const {
-  ACCESS_TOKEN_NAME,
-  ACCESS_TOKEN_AGE,
-  REFRESH_TOKEN_NAME,
-  REFRESH_TOKEN_AGE,
-} = TOKEN_CONFIG;
+const { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME } = TOKEN_CONFIG;
 
 async function tryRefreshTokenFromProxy(
   refreshToken: string,
 ): Promise<boolean> {
   try {
-    const { success, data } = await tokenRefresh(refreshToken);
+    const { success } = await tokenRefresh(refreshToken);
 
-    if (success && data) {
-      const { accessToken, refreshToken } = data;
-
-      await tokenUtils.setTokenIntoCookie(
-        ACCESS_TOKEN_NAME,
-        accessToken,
-        ACCESS_TOKEN_AGE,
-      );
-
-      await tokenUtils.setTokenIntoCookie(
-        REFRESH_TOKEN_NAME,
-        refreshToken,
-        REFRESH_TOKEN_AGE,
-      );
-    }
+    console.debug("🔄 [Auth] tryRefreshTokenFromProxy executed", {
+      success,
+    });
 
     return success;
   } catch (error) {
@@ -55,7 +38,11 @@ const tryRefreshTokenFromHttpClient = async (
     const isTokenRefreshed = requestHeader.get(headerName) === "1";
     if (!isTokenRefreshed) return;
 
-    await tokenRefresh(refreshToken);
+    const { success } = await tokenRefresh(refreshToken);
+
+    console.debug("🔄 [Auth] tryRefreshTokenFromHttpClient executed", {
+      success,
+    });
   } catch (error) {
     console.error("Error refreshing token in http client:", error);
   }

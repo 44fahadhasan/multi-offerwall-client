@@ -85,10 +85,16 @@ export async function getUserInfo() {
 }
 
 export async function tokenRefresh(refreshToken: string) {
+  console.debug("🔐 [Auth] Refresh token received", {
+    refreshTokenPreview: `${refreshToken.slice(0, 10)}...`,
+  });
+
   const response = await authService.tokenRefresh(refreshToken);
 
   if (response.success && response.data) {
-    const { accessToken, refreshToken } = response.data;
+    const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+    console.info("✅ [Auth] Token refresh successful");
 
     await tokenUtils.setTokenIntoCookie(
       ACCESS_TOKEN_NAME,
@@ -98,12 +104,14 @@ export async function tokenRefresh(refreshToken: string) {
 
     await tokenUtils.setTokenIntoCookie(
       REFRESH_TOKEN_NAME,
-      refreshToken,
+      newRefreshToken,
       REFRESH_TOKEN_AGE,
     );
+
+    console.info("🍪 [Auth] Tokens stored in cookies");
   }
 
-  console.log("🔄 [Auth] Token refresh successful", response);
+  console.debug("🔄 [Auth] Token refresh response", response);
 
   return response;
 }
